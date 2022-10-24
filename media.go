@@ -170,6 +170,7 @@ func (pc *producerConsumer[T, U]) start() {
 				if err := pc.cancelCtx.Err(); err != nil {
 					return
 				}
+				requests = atomic.LoadInt64(&pc.interestedConsumers)
 			} else {
 				pc.producerCond.L.Unlock()
 			}
