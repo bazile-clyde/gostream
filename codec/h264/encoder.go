@@ -6,9 +6,9 @@ import "C"
 import (
 	"context"
 	"github.com/edaniels/golog"
+	ourcodec "github.com/edaniels/gostream/codec"
 	"github.com/giorgisio/goav/avcodec"
 	"github.com/giorgisio/goav/avutil"
-	"github.com/pion/mediadevices/pkg/codec"
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
 	"image"
@@ -45,13 +45,18 @@ import (
 //
 //		will copy all the streams except the second video, which will be encoded with libx264, and the 138th audio, which will be encoded with libvorbis.
 type encoder struct {
-	codec  codec.ReadCloser
 	img    image.Image
-	logger golog.Logger
+	width  int
+	height int
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
 	return h.img, nil, nil
+}
+
+func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, error) {
+	h := &encoder{width: width, height: height}
+	return h, nil
 }
 
 func (h *encoder) encode(ctx avcodec.Context, codec avcodec.Codec, img image.Image) ([]byte, error) {
@@ -100,8 +105,8 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 		return nil, errors.Errorf("cannot allocate video codec context")
 	}
 
-	width := 1280
-	height := 720
+	width := h.width
+	height := h.height
 	pixFmt := avcodec.AV_PIX_FMT_YUV420P16
 	_context.SetEncodeParams(width, height, pixFmt)
 
