@@ -146,6 +146,7 @@ func encode(ctx avcodec.Context, codec avcodec.Codec, img image.Image) ([]byte, 
 	if ctx.AvcodecEncodeVideo2(pkt, vFrame, &gp); gp < 0 {
 		return nil, errors.New("cannot encode video frame")
 	}
+	defer avutil.AvFrameFree(vFrame)
 
 	payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
 	return payload, nil
