@@ -2,7 +2,6 @@ package h264
 
 import (
 	"github.com/edaniels/golog"
-	"github.com/giorgisio/goav/avcodec"
 
 	"github.com/edaniels/gostream"
 	"github.com/edaniels/gostream/codec"
@@ -11,7 +10,6 @@ import (
 var DefaultStreamConfig gostream.StreamConfig
 
 func init() {
-	avcodec.AvcodecRegisterAll()
 	DefaultStreamConfig.VideoEncoderFactory = NewEncoderFactory()
 }
 
