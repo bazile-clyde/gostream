@@ -8,7 +8,8 @@ require (
 	github.com/edaniels/golinters v0.0.5-0.20210512224240-495d3b8eed19
 	github.com/edaniels/golog v0.0.0-20230215213219-28954395e8d0
 	github.com/gen2brain/malgo v0.11.10
-	github.com/golangci/golangci-lint v1.51.2
+	github.com/giorgisio/goav v0.1.0
+	github.com/golangci/golangci-lint v1.50.1
 	github.com/google/uuid v1.3.0
 	github.com/gotesttools/gotestfmt/v2 v2.4.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.15.0
