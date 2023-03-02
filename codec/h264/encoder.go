@@ -111,7 +111,7 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 
 	width := h.width
 	height := h.height
-	pixFmt := int(avcodec.AV_PIX_FMT_YUV420P16)
+	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV420P16)
 	_context.SetEncodeParams(width, height, pixFmt)
 
 	// if _context.CodecId().(int) != avcodec.AV_CODEC_ID_H264 {
