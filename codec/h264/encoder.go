@@ -63,7 +63,7 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 	return h, nil
 }
 
-func (h *encoder) encode(ctx *avcodec.Context, codec avcodec.Codec, img image.Image) ([]byte, error) {
+func (h *encoder) encode(ctx *avcodec.Context, codec *avcodec.Codec, img image.Image) ([]byte, error) {
 	if ctx.AvcodecIsOpen() == 0 {
 		return nil, errors.New("codec context not open")
 	}
@@ -111,12 +111,12 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 
 	width := h.width
 	height := h.height
-	pixFmt := avcodec.AV_PIX_FMT_YUV420P16.(avcodec.PixelFormat)
+	pixFmt := int(avcodec.AV_PIX_FMT_YUV420P16)
 	_context.SetEncodeParams(width, height, pixFmt)
 
-	if _context.CodecId().(int) != avcodec.AV_CODEC_ID_H264 {
-		return nil, errors.New("not H264 encoder")
-	}
+	// if _context.CodecId().(int) != avcodec.AV_CODEC_ID_H264 {
+	// 	return nil, errors.New("not H264 encoder")
+	// }
 
 	if _context.AvcodecOpen2(_codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
