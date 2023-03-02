@@ -118,6 +118,8 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	// 	return nil, errors.New("not H264 encoder")
 	// }
 
+	_context.SetTimebase(-1, -1)
+
 	if _context.AvcodecOpen2(_codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
 	}
