@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"github.com/edaniels/gostream/codec/h264"
 
 	"github.com/edaniels/golog"
 	// register video drivers.
@@ -11,9 +12,8 @@ import (
 	"go.uber.org/multierr"
 	goutils "go.viam.com/utils"
 
-	"github.com/viamrobotics/gostream"
-	"github.com/viamrobotics/gostream/codec/vpx"
-	"github.com/viamrobotics/gostream/codec/x264"
+	"github.com/edaniels/gostream"
+	"github.com/edaniels/gostream/codec/vpx"
 )
 
 func main() {
@@ -88,7 +88,7 @@ func runServer(
 		err = multierr.Combine(err, videoSource.Close(ctx))
 	}()
 
-	_ = x264.DefaultStreamConfig
+	_ = h264.DefaultStreamConfig
 	_ = vpx.DefaultStreamConfig
 	config := vpx.DefaultStreamConfig
 	stream, err := gostream.NewStream(config)

@@ -44,6 +44,10 @@ import (
 //			ffmpeg -i INPUT -map 0 -c copy -c:v:1 libx264 -c:a:137 libvorbis OUTPUT
 //
 //		will copy all the streams except the second video, which will be encoded with libx264, and the 138th audio, which will be encoded with libvorbis.
+//
+// INSTALLING FFMPEG FROM SOURCE:
+//
+//	use v3.X https://github.com/FFmpeg/FFmpeg/tree/release/3.4
 type encoder struct {
 	img    image.Image
 	width  int
@@ -59,7 +63,7 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 	return h, nil
 }
 
-func (h *encoder) encode(ctx avcodec.Context, codec avcodec.Codec, img image.Image) ([]byte, error) {
+func (h *encoder) encode(ctx *avcodec.Context, codec avcodec.Codec, img image.Image) ([]byte, error) {
 	if ctx.AvcodecIsOpen() == 0 {
 		return nil, errors.New("codec context not open")
 	}
@@ -84,7 +88,7 @@ func (h *encoder) encode(ctx avcodec.Context, codec avcodec.Codec, img image.Ima
 	avutil.SetPicture(vFrame, yuvImg.(*image.YCbCr))
 
 	var gp int
-	if ctx.AvcodecEncodeVideo2(pkt, vFrame, &gp); gp < 0 {
+	if ctx.AvcodecEncodeVideo2(pkt, (*avcodec.Frame)(unsafe.Pointer(vFrame)), &gp); gp < 0 {
 		return nil, errors.New("cannot encode video frame")
 	}
 	defer avutil.AvFrameFree(vFrame)
@@ -107,10 +111,10 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 
 	width := h.width
 	height := h.height
-	pixFmt := avcodec.AV_PIX_FMT_YUV420P16
+	pixFmt := avcodec.AV_PIX_FMT_YUV420P16.(avcodec.PixelFormat)
 	_context.SetEncodeParams(width, height, pixFmt)
 
-	if _context.CodecId() != avcodec.AV_CODEC_ID_H264 {
+	if _context.CodecId().(int) != avcodec.AV_CODEC_ID_H264 {
 		return nil, errors.New("not H264 encoder")
 	}
 
