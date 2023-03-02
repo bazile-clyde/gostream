@@ -47,7 +47,7 @@ import (
 //
 // INSTALLING FFMPEG FROM SOURCE:
 //
-//	use v3.X https://github.com/FFmpeg/FFmpeg/tree/release/3.4
+//	use v4.X https://github.com/FFmpeg/FFmpeg/tree/release/4.4
 type encoder struct {
 	img    image.Image
 	width  int
