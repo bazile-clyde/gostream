@@ -109,16 +109,9 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 		return nil, errors.Errorf("cannot allocate video codec context")
 	}
 
-	width := h.width
-	height := h.height
-	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV420P16)
-	_context.SetEncodeParams(width, height, pixFmt)
-
-	// if _context.CodecId().(int) != avcodec.AV_CODEC_ID_H264 {
-	// 	return nil, errors.New("not H264 encoder")
-	// }
-
-	_context.SetTimebase(-1, -1)
+	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV422P9)
+	_context.SetEncodeParams(h.width, h.height, pixFmt)
+	_context.SetTimebase(1, 1)
 
 	if _context.AvcodecOpen2(_codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
