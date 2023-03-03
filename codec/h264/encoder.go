@@ -64,6 +64,32 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 }
 
 func (h *encoder) encode(ctx *avcodec.Context, codec *avcodec.Codec, img image.Image) ([]byte, error) {
+	// TODO: use avcodec_send_frame(); must add to lib
+	// DUMMY CODE: http://ix.io/1Tmf
+	// void FrameWriter::encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt)
+	//
+	//	{
+	//	   int ret;
+	//
+	//	   /* send the frame to the encoder */
+	//	   ret = avcodec_send_frame(enc_ctx, frame);
+	//	   if (ret < 0) {
+	//	       fprintf(stderr, "error sending a frame for encoding\n");
+	//	       return;
+	//	   }
+	//
+	//	   while (ret >= 0) {
+	//	       ret = avcodec_receive_packet(enc_ctx, pkt);
+	//	       if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+	//	           return;
+	//	       else if (ret < 0) {
+	//	           fprintf(stderr, "error during encoding\n");
+	//	           return;
+	//	       }
+	//
+	//	       finish_frame(*pkt, true);
+	//	   }
+	//	}
 	if ctx.AvcodecIsOpen() == 0 {
 		return nil, errors.New("codec context not open")
 	}
@@ -109,7 +135,7 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 		return nil, errors.Errorf("cannot allocate video codec context")
 	}
 
-	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV422P9)
+	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV)
 	_context.SetEncodeParams(h.width, h.height, pixFmt)
 	_context.SetTimebase(1, 1)
 
