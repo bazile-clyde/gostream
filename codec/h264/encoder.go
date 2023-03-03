@@ -113,11 +113,20 @@ func (h *encoder) encode(ctx *avcodec.Context, codec *avcodec.Codec, img image.I
 	vFrame := avutil.AvFrameAlloc()
 	avutil.SetPicture(vFrame, yuvImg.(*image.YCbCr))
 
-	var gp int
-	if ctx.AvcodecEncodeVideo2(pkt, (*avcodec.Frame)(unsafe.Pointer(vFrame)), &gp); gp < 0 {
-		return nil, errors.New("cannot encode video frame")
+	// var gp int
+	// if ctx.AvcodecEncodeVideo2(pkt, (*avcodec.Frame)(unsafe.Pointer(vFrame)), &gp); gp < 0 {
+	// 	return nil, errors.New("cannot encode video frame")
+	// }
+
+	if ret := ctx.AvCodecSendFrame(vFrame); ret < 0 {
+		return nil, errors.New("error sending a frame for encoding")
 	}
+
 	defer avutil.AvFrameFree(vFrame)
+
+	if ret := ctx.AvCodecReceivePacket(pkt); ret < 0 {
+		return nil, errors.New("error during encoding")
+	}
 
 	payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
 	return payload, nil
