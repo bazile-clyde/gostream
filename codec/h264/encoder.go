@@ -9,7 +9,6 @@ import (
 	ourcodec "github.com/edaniels/gostream/codec"
 	"github.com/giorgisio/goav/avcodec"
 	"github.com/giorgisio/goav/avutil"
-	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
 	"image"
 	"unsafe"
@@ -63,77 +62,6 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 	return h, nil
 }
 
-func (h *encoder) encode(ctx *avcodec.Context, codec *avcodec.Codec, img image.Image) ([]byte, error) {
-	// TODO: use avcodec_send_frame(); must add to lib
-	// DUMMY CODE: http://ix.io/1Tmf
-	// void FrameWriter::encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt)
-	//
-	//	{
-	//	   int ret;
-	//
-	//	   /* send the frame to the encoder */
-	//	   ret = avcodec_send_frame(enc_ctx, frame);
-	//	   if (ret < 0) {
-	//	       fprintf(stderr, "error sending a frame for encoding\n");
-	//	       return;
-	//	   }
-	//
-	//	   while (ret >= 0) {
-	//	       ret = avcodec_receive_packet(enc_ctx, pkt);
-	//	       if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
-	//	           return;
-	//	       else if (ret < 0) {
-	//	           fprintf(stderr, "error during encoding\n");
-	//	           return;
-	//	       }
-	//
-	//	       finish_frame(*pkt, true);
-	//	   }
-	//	}
-	if ctx.AvcodecIsOpen() == 0 {
-		return nil, errors.New("codec context not open")
-	}
-
-	if codec.AvCodecIsEncoder() == 0 {
-		return nil, errors.New("codec is not an encoder")
-	}
-
-	pkt := avcodec.AvPacketAlloc()
-	if pkt == nil {
-		return nil, errors.Errorf("cannot allocate packet")
-	}
-
-	h.img = img
-	var r video.ReaderFunc = h.Read
-	yuvImg, _, err := video.ToI420(r).Read()
-	if err != nil {
-		return nil, errors.New("could not convert image to I420")
-	}
-
-	vFrame := avutil.AvFrameAlloc()
-	avutil.SetPicture(vFrame, yuvImg.(*image.YCbCr))
-
-	// var gp int
-	// if ctx.AvcodecEncodeVideo2(pkt, (*avcodec.Frame)(unsafe.Pointer(vFrame)), &gp); gp < 0 {
-	// 	return nil, errors.New("cannot encode video frame")
-	// }
-
-	if ret := ctx.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(vFrame))); ret < 0 {
-		return nil, errors.New("error sending a frame for encoding")
-	}
-
-	defer avutil.AvFrameFree(vFrame)
-
-	if ret := ctx.AvCodecReceivePacket(pkt); ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
-		return nil, errors.Errorf("avutil error '%v'", ret)
-	} else if ret < 0 {
-		return nil, errors.New("error during encoding")
-	}
-
-	payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
-	return payload, nil
-}
-
 func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	encName := "h264_v4l2m2m"
 	_codec := avcodec.AvcodecFindEncoderByName(encName)
@@ -145,14 +73,55 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	if _context == nil {
 		return nil, errors.Errorf("cannot allocate video codec context")
 	}
+	defer _context.AvcodecFreeContext()
 
+	pkt := avcodec.AvPacketAlloc()
+	if pkt == nil {
+		return nil, errors.Errorf("cannot allocate packet")
+	}
+	defer pkt.AvFreePacket()
+
+	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV)
-	_context.SetEncodeParams(h.width, h.height, pixFmt)
-	_context.SetTimebase(1, 1)
+	_context.SetEncodeParams2(
+		width,
+		height,
+		pixFmt,
+		true,
+		10,
+	)
+	_context.SetTimebase(1, 25)
 
 	if _context.AvcodecOpen2(_codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
 	}
 
-	return h.encode(_context, _codec, img)
+	frame := avutil.AvFrameAlloc()
+	defer avutil.AvFrameFree(frame)
+	if err := avutil.AvSetFrame(frame, h.width, h.height, pixFmt); err != nil {
+		return nil, errors.New("cannot allocate the video frame data")
+	}
+
+	frame.AvSetFrameFromImg(img)
+
+	if ret := _context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(frame))); ret < 0 {
+		return nil, errors.New("error sending a frame for encoding")
+	}
+
+	var bytes []byte
+	for {
+		ret := _context.AvCodecReceivePacket(pkt)
+		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
+			break
+		} else if ret < 0 {
+			return nil, errors.New("error during encoding")
+		}
+
+		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
+		bytes = append(bytes, payload...)
+
+		pkt.AvPacketUnref()
+	}
+
+	return bytes, nil
 }
