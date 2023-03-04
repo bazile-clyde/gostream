@@ -118,7 +118,7 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	avutil.SetPicture(frame, ycbcrImg)
 
 	fmt.Println("SENDING FRAME...")
-	if ret := h._context.AvCodecSendFrame(nil); ret < 0 {
+	if ret := h._context.AvCodecSendFrame(frame); ret < 0 {
 		return nil, errors.New("error sending a frame for encoding")
 	}
 	fmt.Println("FRAME SENT")
