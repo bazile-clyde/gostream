@@ -5,6 +5,7 @@ package h264
 import "C"
 import (
 	"context"
+	"fmt"
 	"github.com/edaniels/golog"
 	ourcodec "github.com/edaniels/gostream/codec"
 	"github.com/giorgisio/goav/avcodec"
@@ -48,9 +49,11 @@ import (
 //
 //	use v4.X https://github.com/FFmpeg/FFmpeg/tree/release/4.4
 type encoder struct {
-	img    image.Image
-	width  int
-	height int
+	img      image.Image
+	_codec   *avcodec.Codec
+	_context *avcodec.Context
+	width    int
+	height   int
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -62,18 +65,25 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 	return h, nil
 }
 
-func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
-	encName := "h264_v4l2m2m"
-	_codec := avcodec.AvcodecFindEncoderByName(encName)
-	if _codec == nil {
-		return nil, errors.Errorf("cannot find encoder '%s'", encName)
+func (h *encoder) initialize() {
+	if h._codec != nil && h._context != nil {
+		return
 	}
 
-	_context := _codec.AvcodecAllocContext3()
-	if _context == nil {
-		return nil, errors.Errorf("cannot allocate video codec context")
+	encName := "h264_v4l2m2m"
+	h._codec = avcodec.AvcodecFindEncoderByName(encName)
+	if h._codec == nil {
+		panic(fmt.Sprintf("cannot find encoder '%s'", encName))
 	}
-	defer _context.AvcodecFreeContext()
+
+	h._context = h._codec.AvcodecAllocContext3()
+	if h._context == nil {
+		panic("cannot allocate video codec context")
+	}
+}
+
+func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
+	h.initialize()
 
 	pkt := avcodec.AvPacketAlloc()
 	if pkt == nil {
@@ -83,34 +93,40 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()
 	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV)
-	_context.SetEncodeParams2(
+	h._context.SetEncodeParams2(
 		width,
 		height,
 		pixFmt,
 		true,
 		10,
 	)
-	_context.SetTimebase(1, 25)
+	h._context.SetTimebase(1, 25)
 
-	if _context.AvcodecOpen2(_codec, nil) < 0 {
+	if h._context.AvcodecOpen2(h._codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
 	}
 
+	fmt.Println("ALLOCATING FRAME...")
 	frame := avutil.AvFrameAlloc()
 	defer avutil.AvFrameFree(frame)
-	if err := avutil.AvSetFrame(frame, h.width, h.height, pixFmt); err != nil {
+	if err := avutil.AvSetFrame(frame, h.width, h.height, int(pixFmt)); err != nil {
 		return nil, errors.New("cannot allocate the video frame data")
 	}
+	fmt.Println("ALLOCATED FRAME")
 
-	frame.AvSetFrameFromImg(img)
+	ycbcrImg := image.NewYCbCr(img.Bounds(), image.YCbCrSubsampleRatio420)
+	avutil.SetPicture(frame, ycbcrImg)
 
-	if ret := _context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(frame))); ret < 0 {
+	fmt.Println("SENDING FRAME...")
+	if ret := h._context.AvCodecSendFrame(nil); ret < 0 {
 		return nil, errors.New("error sending a frame for encoding")
 	}
+	fmt.Println("FRAME SENT")
 
 	var bytes []byte
+	fmt.Println("GETTING BYTES")
 	for {
-		ret := _context.AvCodecReceivePacket(pkt)
+		ret := h._context.AvCodecReceivePacket(pkt)
 		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
 			break
 		} else if ret < 0 {
