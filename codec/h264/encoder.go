@@ -92,11 +92,11 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	defer pkt.AvFreePacket()
 
 	width, height := img.Bounds().Dx(), img.Bounds().Dy()
-	pixFmt := avcodec.PixelFormat(avcodec.AV_PIX_FMT_YUV)
+	pixFmt := avcodec.AV_PIX_FMT_YUV
 	h._context.SetEncodeParams2(
 		width,
 		height,
-		pixFmt,
+		avcodec.PixelFormat(pixFmt),
 		true,
 		10,
 	)
@@ -109,7 +109,7 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	fmt.Println("ALLOCATING FRAME...")
 	frame := avutil.AvFrameAlloc()
 	defer avutil.AvFrameFree(frame)
-	if err := avutil.AvSetFrame(frame, h.width, h.height, int(pixFmt)); err != nil {
+	if err := avutil.AvSetFrame(frame, h.width, h.height, pixFmt); err != nil {
 		return nil, errors.New("cannot allocate the video frame data")
 	}
 	fmt.Println("ALLOCATED FRAME")
