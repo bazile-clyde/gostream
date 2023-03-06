@@ -256,3 +256,5 @@ require (
 	mvdan.cc/unparam v0.0.0-20220706161116-678bad134442 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
+
+replace github.com/pion/mediadevices => /usr/libs/mediadevices
