@@ -49,11 +49,13 @@ import (
 //
 //	use v4.X https://github.com/FFmpeg/FFmpeg/tree/release/4.4
 type encoder struct {
-	img      image.Image
-	_codec   *avcodec.Codec
-	_context *avcodec.Context
-	width    int
-	height   int
+	img        image.Image
+	_codec     *avcodec.Codec
+	_context   *avcodec.Context
+	width      int
+	height     int
+	sentFrames int
+	maxFrames  int
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -61,7 +63,7 @@ func (h *encoder) Read() (img image.Image, release func(), err error) {
 }
 
 func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, error) {
-	h := &encoder{width: width, height: height}
+	h := &encoder{width: width, height: height, maxFrames: 2}
 	return h, nil
 }
 
@@ -123,15 +125,25 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	}
 	fmt.Println("FRAME SENT")
 
+	if h.sentFrames < h.maxFrames {
+		h.sentFrames += 1
+		return []byte{}, nil
+	}
+
+	h.sentFrames = 0
+
 	var bytes []byte
 	fmt.Println("GETTING BYTES")
 	for {
 		ret := h._context.AvCodecReceivePacket(pkt)
-		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
+		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN || ret == -11 {
 			break
-		} else if ret < 0 {
-			return nil, errors.New("error during encoding")
 		}
+		if ret < 0 {
+			return nil, errors.Errorf("error during encoding: %v", ret)
+		}
+
+		fmt.Printf("SUCCESS GETTING PACKET: %v\n", len(bytes))
 
 		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
 		bytes = append(bytes, payload...)
