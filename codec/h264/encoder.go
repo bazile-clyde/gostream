@@ -125,25 +125,19 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	}
 	fmt.Println("FRAME SENT")
 
-	// if h.sentFrames < h.maxFrames {
-	// 	h.sentFrames += 1
-	// 	return []byte{}, nil
-	// }
-
-	// h.sentFrames = 0
-
 	var bytes []byte
 	fmt.Println("GETTING BYTES")
 	for {
 		ret := h.context.AvCodecReceivePacket(pkt)
 		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN || ret == -11 {
+			fmt.Printf("got ret != 0: %v\n", ret)
 			break
 		}
 		if ret < 0 {
 			return nil, errors.Errorf("error during encoding: %v", ret)
 		}
 
-		fmt.Printf("SUCCESS GETTING PACKET: %v\n", len(bytes))
+		fmt.Printf("SUCCESS GETTING PACKET: %v\n", pkt.Size())
 
 		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
 		bytes = append(bytes, payload...)
