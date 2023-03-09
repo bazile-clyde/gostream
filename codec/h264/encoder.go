@@ -100,13 +100,7 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 }
 
 func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
-	defer func() {
-		avutil.AvFrameUnref(h.frame)
-		avutil.AvFrameFree(h.frame)
-		if h.frame = avutil.AvFrameAlloc(); h.frame == nil {
-			fmt.Println("cannot alloc frame")
-		}
-	}()
+	defer avutil.AvFrameUnref(h.frame)
 
 	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixFmt); err != nil {
 		return nil, errors.Wrap(err, "cannot set frame")
@@ -116,7 +110,7 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 
 	fmt.Println("WRITING IMG TO FRAME...")
 	if ret := avutil.AvFrameMakeWritable(h.frame); ret < 0 {
-		return nil, errors.Errorf("cannot make frame writable %d", ret)
+		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot make frame writable")
 	}
 
 	h.img = img
@@ -129,7 +123,7 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	// set frame->pts to time stamp, i.e., frame->pts = h.inc .... h.inc++
 	fmt.Println("SET FRAME FROM IMG")
 
-	fmt.Println("GETTING BYTES")
+	fmt.Println("GETTING BYTES...")
 	return h.encodeBytes()
 }
 
@@ -142,16 +136,16 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 	defer pkt.AvPacketUnref()
 
 	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(h.frame))); ret < 0 {
-		return nil, errors.Errorf("cannot send frame for encoding %d", ret)
+		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot send frame for encoding")
 	}
 
 	var bytes []byte
-	for ret := 0; ret > 0; {
+	for ret := 0; ret >= 0; {
 		ret = h.context.AvCodecReceivePacket(pkt)
 		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
-			return bytes, nil
+			break
 		} else if ret < 0 {
-			return nil, errors.Errorf("error during encoding %d", ret)
+			return nil, errors.Wrap(avutil.ErrorFromCode(ret), "error during encoding")
 		}
 
 		fmt.Printf("write package %d (size=%5d)", pkt.Pts(), pkt.Size())
