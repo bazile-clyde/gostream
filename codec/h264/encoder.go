@@ -13,6 +13,9 @@ import (
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
 	"image"
+	"image/jpeg"
+	"log"
+	"os"
 	"unsafe"
 )
 
@@ -123,6 +126,22 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 	// set frame->pts to time stamp, i.e., frame->pts = h.inc .... h.inc++
 	fmt.Println("SET FRAME FROM IMG")
 
+	fmt.Println("SAVING IMG TO FILE...")
+	wImg, err := avutil.GetPicture(h.frame)
+	if err != nil {
+		panic("INVALID FRAME IMG!")
+	}
+
+	f, err := os.Create("wImg.jpg")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err = jpeg.Encode(f, wImg, nil); err != nil {
+		log.Printf("failed to encode: %v", err)
+	}
+	fmt.Println("SAVED!")
+
 	fmt.Println("GETTING BYTES...")
 	return h.encodeBytes()
 }
@@ -148,7 +167,7 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 			return nil, errors.Wrap(avutil.ErrorFromCode(ret), fmt.Sprintf("error during encoding %d", ret))
 		}
 
-		fmt.Printf("write package %d (size=%5d)", pkt.Pts(), pkt.Size())
+		fmt.Printf("write package %d (size=%d)", pkt.Pts(), pkt.Size())
 		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
 		bytes = append(bytes, payload...)
 
