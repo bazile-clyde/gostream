@@ -145,7 +145,7 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
 			break
 		} else if ret < 0 {
-			return nil, errors.Wrap(avutil.ErrorFromCode(ret), "error during encoding")
+			return nil, errors.Wrap(avutil.ErrorFromCode(ret), fmt.Sprintf("error during encoding %d", ret))
 		}
 
 		fmt.Printf("write package %d (size=%5d)", pkt.Pts(), pkt.Size())
