@@ -134,7 +134,7 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 	}
 	defer pkt.AvFreePacket()
 
-	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(h.frame)); ret < 0 {
+	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(h.frame))); ret < 0 {
 		return nil, errors.Errorf("cannot send frame for encoding %d", ret)
 	}
 
