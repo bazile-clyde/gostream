@@ -100,7 +100,13 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 }
 
 func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
-	defer avutil.AvFrameUnref(h.frame)
+	defer func() {
+		avutil.AvFrameUnref(h.frame)
+		avutil.AvFrameFree(h.frame)
+		if h.frame = avutil.AvFrameAlloc(); h.frame == nil {
+			fmt.Println("cannot alloc frame")
+		}
+	}()
 
 	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixFmt); err != nil {
 		return nil, errors.Wrap(err, "cannot set frame")
