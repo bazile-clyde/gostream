@@ -58,7 +58,7 @@ type encoder struct {
 	reader  video.Reader
 	pixFmt  int
 	// TODO: The resulting struct must be freed using av_frame_free().
-	frame avutil.Frame
+	frame *avutil.Frame
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -134,7 +134,7 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 	}
 	defer pkt.AvFreePacket()
 
-	if ret := h.context.AvCodecSendFrame(h.frame); ret < 0 {
+	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(h.frame)); ret < 0 {
 		return nil, errors.Errorf("cannot send frame for encoding %d", ret)
 	}
 
