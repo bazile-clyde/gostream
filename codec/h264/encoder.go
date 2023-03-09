@@ -13,9 +13,6 @@ import (
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
 	"image"
-	"image/jpeg"
-	"log"
-	"os"
 	"unsafe"
 )
 
@@ -62,6 +59,7 @@ type encoder struct {
 	pixFmt  int
 	// TODO: The resulting struct must be freed using av_frame_free().
 	frame *avutil.Frame
+	pts   int64
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -118,29 +116,15 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 
 	h.img = img
 	yuvImg, _, err := h.reader.Read()
+
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get image")
 	}
 
-	h.frame.AvSetFrameFromImg(yuvImg)
-	// set frame->pts to time stamp, i.e., frame->pts = h.inc .... h.inc++
-	fmt.Println("SET FRAME FROM IMG")
-
-	fmt.Println("SAVING IMG TO FILE...")
-	wImg, err := avutil.GetPicture(h.frame)
-	if err != nil {
-		panic("INVALID FRAME IMG!")
-	}
-
-	f, err := os.Create("wImg.jpg")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	if err = jpeg.Encode(f, wImg, nil); err != nil {
-		log.Printf("failed to encode: %v", err)
-	}
-	fmt.Println("SAVED!")
+	fmt.Printf("SET FRAME FROM IMG %d", yuvImg.(*image.YCbCr).SubsampleRatio)
+	h.frame.AvSetFrameFromImg(yuvImg.(*image.YCbCr))
+	h.frame.AvSetFramePTS(h.pts)
+	h.pts++
 
 	fmt.Println("GETTING BYTES...")
 	return h.encodeBytes()
