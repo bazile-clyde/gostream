@@ -50,15 +50,15 @@ import (
 //
 //	use v4.X https://github.com/FFmpeg/FFmpeg/tree/release/4.4
 type encoder struct {
-	img        image.Image
-	codec      *avcodec.Codec
-	context    *avcodec.Context
-	width      int
-	height     int
-	sentFrames int
-	maxFrames  int
-	reader     video.Reader
-	pixFmt     int
+	img     image.Image
+	codec   *avcodec.Codec
+	context *avcodec.Context
+	width   int
+	height  int
+	reader  video.Reader
+	pixFmt  int
+	// TODO: The resulting struct must be freed using av_frame_free().
+	frame avutil.Frame
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -66,7 +66,7 @@ func (h *encoder) Read() (img image.Image, release func(), err error) {
 }
 
 func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, error) {
-	h := &encoder{width: width, height: height, maxFrames: 2}
+	h := &encoder{width: width, height: height}
 
 	encName := "h264_v4l2m2m"
 	h.codec = avcodec.AvcodecFindEncoderByName(encName)
@@ -74,87 +74,84 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 		panic(fmt.Sprintf("cannot find encoder '%s'", encName))
 	}
 
-	h.context = avcodec.AvcodecAllocContext()
+	h.context = h.codec.AvcodecAllocContext3()
 	if h.context == nil {
 		panic("cannot allocate video codec context")
 	}
 
 	h.pixFmt = avcodec.AV_PIX_FMT_YUV420P
 	h.context.SetEncodeParams(width, height, avcodec.PixelFormat(h.pixFmt))
-	h.context.SetTimebase(1, 25)
+	h.context.SetTimebase(1, 30) // inverse of fps e.g., 30 fps == 1/30
 	if h.context.AvcodecOpen2(h.codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
+	}
+
+	// AVFrame is typically allocated once and then reused multiple times to hold
+	// different data (e.g. a single AVFrame to hold frames received from a
+	// decoder). In such a case, av_frame_unref() will free any references held by
+	// the frame and reset it to its original clean state before it
+	// is reused again.
+	if h.frame = avutil.AvFrameAlloc(); h.frame == nil {
+		return nil, errors.New("cannot alloc frame")
 	}
 
 	h.reader = video.ToI420((video.ReaderFunc)(h.Read))
 	return h, nil
 }
 
-func (h *encoder) receivePkt() ([]byte, error) {
-	pkt := avcodec.AvPacketAlloc()
-	if pkt == nil {
-		return nil, errors.Errorf("cannot allocate packet")
-	}
-	defer pkt.AvFreePacket()
-	defer pkt.AvPacketUnref()
-
-	ret := h.context.AvCodecReceivePacket(pkt)
-	if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN || ret == -11 {
-		fmt.Println("got ret != 0: %v\n", ret)
-		return nil, nil
-	}
-
-	if ret < 0 {
-		return nil, errors.Errorf("error during encoding: %v", ret)
-	}
-
-	fmt.Printf("SUCCESS GETTING PACKET: %v\n", pkt.Size())
-
-	payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
-	return payload, nil
-}
 func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
-	fmt.Println("ALLOCATING FRAME...")
-	frame := avutil.AvFrameAlloc()
-	defer avutil.AvFrameFree(frame)
+	defer avutil.AvFrameUnref(h.frame)
 
-	numBytes := uintptr(avcodec.AvpictureGetSize(h.pixFmt, h.width, h.height))
-	buffer := avutil.AvMalloc(numBytes)
+	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixFmt); err != nil {
+		return nil, errors.Wrap(err, "cannot set frame")
+	}
 
-	avp := (*avcodec.Picture)(unsafe.Pointer(frame))
-	avp.AvpictureFill((*uint8)(buffer), h.pixFmt, h.width, h.height)
-
-	fmt.Println("ALLOCATED FRAME")
+	fmt.Println("FRAME SET")
 
 	fmt.Println("WRITING IMG TO FRAME...")
+	if ret := avutil.AvFrameMakeWritable(h.frame); ret < 0 {
+		return nil, errors.Errorf("cannot make frame writable %d", ret)
+	}
+
 	h.img = img
 	yuvImg, _, err := h.reader.Read()
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot get image")
 	}
 
-	frame.AvSetFrameFromImg(yuvImg)
+	h.frame.AvSetFrameFromImg(yuvImg)
+	// set frame->pts to time stamp, i.e., frame->pts = h.inc .... h.inc++
 	fmt.Println("SET FRAME FROM IMG")
 
-	fmt.Println("SENDING FRAME...")
-	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(frame))); ret < 0 {
-		return nil, errors.New("error sending a frame for encoding")
+	fmt.Println("GETTING BYTES")
+	return h.encodeBytes()
+}
+
+func (h *encoder) encodeBytes() ([]byte, error) {
+	pkt := avcodec.AvPacketAlloc()
+	if pkt == nil {
+		return nil, errors.Errorf("cannot allocate packet")
 	}
-	fmt.Println("FRAME SENT")
+	defer pkt.AvFreePacket()
+
+	if ret := h.context.AvCodecSendFrame(h.frame); ret < 0 {
+		return nil, errors.Errorf("cannot send frame for encoding %d", ret)
+	}
 
 	var bytes []byte
-	fmt.Println("GETTING BYTES")
-	for {
-		b, err := h.receivePkt()
-		if err != nil {
-			return nil, err
+	for ret := 0; ret > 0; {
+		ret = h.context.AvCodecReceivePacket(pkt)
+		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
+			return bytes, nil
+		} else if ret < 0 {
+			return nil, errors.Errorf("error during encoding %d", ret)
 		}
 
-		if b == nil {
-			break
-		}
+		fmt.Printf("write package %d (size=%5d)", pkt.Pts(), pkt.Size())
+		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
+		bytes = append(bytes, payload...)
 
-		bytes = append(bytes, b...)
+		pkt.AvPacketUnref()
 	}
 
 	return bytes, nil
