@@ -4,6 +4,7 @@ package h264
 
 import "C"
 import (
+	"container/list"
 	"context"
 	"fmt"
 	"github.com/edaniels/golog"
@@ -13,6 +14,7 @@ import (
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
 	"image"
+	"time"
 	"unsafe"
 )
 
@@ -60,6 +62,15 @@ type encoder struct {
 	// TODO: The resulting struct must be freed using av_frame_free().
 	frame *avutil.Frame
 	pts   int64
+	fps   list.List
+}
+
+func (h *encoder) getFps() int {
+	oneSecAgo := time.Now().Add(-time.Second)
+	for h.fps.Front().Value.(*time.Time).Before(oneSecAgo) {
+		h.fps.Remove(h.fps.Front())
+	}
+	return h.fps.Len()
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -101,15 +112,12 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 }
 
 func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
-	defer avutil.AvFrameUnref(h.frame)
-
+	h.fps.PushBack(time.Now())
+	fmt.Printf("FPS=%d\n", h.getFps())
 	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixFmt); err != nil {
 		return nil, errors.Wrap(err, "cannot set frame")
 	}
 
-	fmt.Println("FRAME SET")
-
-	fmt.Println("WRITING IMG TO FRAME...")
 	if ret := avutil.AvFrameMakeWritable(h.frame); ret < 0 {
 		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot make frame writable")
 	}
@@ -121,12 +129,10 @@ func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
 		return nil, errors.Wrap(err, "cannot get image")
 	}
 
-	fmt.Printf("SET FRAME FROM IMG %d", yuvImg.(*image.YCbCr).SubsampleRatio)
 	h.frame.AvSetFrameFromImg(yuvImg.(*image.YCbCr))
 	h.frame.AvSetFramePTS(h.pts)
 	h.pts++
 
-	fmt.Println("GETTING BYTES...")
 	return h.encodeBytes()
 }
 
@@ -137,6 +143,7 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 	}
 	defer pkt.AvFreePacket()
 	defer pkt.AvPacketUnref()
+	defer avutil.AvFrameUnref(h.frame)
 
 	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(h.frame))); ret < 0 {
 		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot send frame for encoding")
@@ -147,11 +154,12 @@ func (h *encoder) encodeBytes() ([]byte, error) {
 		ret = h.context.AvCodecReceivePacket(pkt)
 		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
 			break
+		} else if ret == -11 {
+			break
 		} else if ret < 0 {
 			return nil, errors.Wrap(avutil.ErrorFromCode(ret), fmt.Sprintf("error during encoding %d", ret))
 		}
 
-		fmt.Printf("write package %d (size=%d)", pkt.Pts(), pkt.Size())
 		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
 		bytes = append(bytes, payload...)
 
