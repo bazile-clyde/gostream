@@ -67,7 +67,7 @@ type encoder struct {
 
 func (h *encoder) getFps() int {
 	oneSecAgo := time.Now().Add(-time.Second)
-	for h.fps.Front().Value.(*time.Time).Before(oneSecAgo) {
+	for h.fps.Front().Value.(time.Time).Before(oneSecAgo) {
 		h.fps.Remove(h.fps.Front())
 	}
 	return h.fps.Len()

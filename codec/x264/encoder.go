@@ -2,8 +2,11 @@
 package x264
 
 import (
+	"container/list"
 	"context"
+	"fmt"
 	"image"
+	"time"
 
 	"github.com/edaniels/golog"
 	"github.com/pion/mediadevices/pkg/codec"
@@ -17,10 +20,19 @@ type encoder struct {
 	codec  codec.ReadCloser
 	img    image.Image
 	logger golog.Logger
+	fps    list.List
 }
 
 // Gives suitable results. Probably want to make this configurable this in the future.
 const bitrate = 3_200_000
+
+func (h *encoder) getFps() int {
+	oneSecAgo := time.Now().Add(-time.Second)
+	for h.fps.Front().Value.(time.Time).Before(oneSecAgo) {
+		h.fps.Remove(h.fps.Front())
+	}
+	return h.fps.Len()
+}
 
 // NewEncoder returns an x264 encoder that can encode images of the given width and height. It will
 // also ensure that it produces key frames at the given interval.
@@ -57,6 +69,9 @@ func (v *encoder) Read() (img image.Image, release func(), err error) {
 
 // Encode asks the codec to process the given image.
 func (v *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
+	v.fps.PushBack(time.Now())
+	fmt.Printf("FPS=%d\n", v.getFps())
+
 	v.img = img
 	data, release, err := v.codec.Read()
 	dataCopy := make([]byte, len(data))
