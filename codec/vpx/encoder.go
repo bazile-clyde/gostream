@@ -2,9 +2,11 @@
 package vpx
 
 import (
+	"container/list"
 	"context"
 	"fmt"
 	"image"
+	"time"
 
 	"github.com/edaniels/golog"
 	"github.com/pion/mediadevices/pkg/codec"
@@ -18,6 +20,7 @@ type encoder struct {
 	codec  codec.ReadCloser
 	img    image.Image
 	logger golog.Logger
+	fps    list.List
 }
 
 // Version determines the version of a vpx codec.
@@ -73,6 +76,14 @@ func NewEncoder(codecVersion Version, width, height, keyFrameInterval int, logge
 	return enc, nil
 }
 
+func (h *encoder) getFps() int {
+	oneSecAgo := time.Now().Add(-time.Second)
+	for h.fps.Front().Value.(time.Time).Before(oneSecAgo) {
+		h.fps.Remove(h.fps.Front())
+	}
+	return h.fps.Len()
+}
+
 // Read returns an image for codec to process.
 func (v *encoder) Read() (img image.Image, release func(), err error) {
 	return v.img, nil, nil
@@ -80,6 +91,9 @@ func (v *encoder) Read() (img image.Image, release func(), err error) {
 
 // Encode asks the codec to process the given image.
 func (v *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
+	v.fps.PushBack(time.Now())
+	fmt.Printf("FPS=%d\n", v.getFps())
+
 	v.img = img
 	data, release, err := v.codec.Read()
 	dataCopy := make([]byte, len(data))
