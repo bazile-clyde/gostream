@@ -3,7 +3,7 @@ package main
 
 import (
 	"context"
-	"github.com/edaniels/gostream/codec/h264"
+	"github.com/viamrobotics/gostream/codec/h264"
 
 	"github.com/edaniels/golog"
 	// register video drivers.
@@ -12,8 +12,8 @@ import (
 	"go.uber.org/multierr"
 	goutils "go.viam.com/utils"
 
-	"github.com/edaniels/gostream"
-	"github.com/edaniels/gostream/codec/vpx"
+	"github.com/viamrobotics/gostream"
+	"github.com/viamrobotics/gostream/codec/vpx"
 )
 
 func main() {

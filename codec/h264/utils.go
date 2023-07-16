@@ -4,8 +4,8 @@ import (
 	"github.com/edaniels/golog"
 	"github.com/giorgisio/goav/avcodec"
 
-	"github.com/edaniels/gostream"
-	"github.com/edaniels/gostream/codec"
+	"github.com/viamrobotics/gostream"
+	"github.com/viamrobotics/gostream/codec"
 )
 
 var DefaultStreamConfig gostream.StreamConfig

@@ -4,17 +4,15 @@ package h264
 
 import "C"
 import (
-	"container/list"
 	"context"
 	"fmt"
 	"github.com/edaniels/golog"
-	ourcodec "github.com/edaniels/gostream/codec"
 	"github.com/giorgisio/goav/avcodec"
 	"github.com/giorgisio/goav/avutil"
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
+	ourcodec "github.com/viamrobotics/gostream/codec"
 	"image"
-	"time"
 	"unsafe"
 )
 
@@ -62,15 +60,6 @@ type encoder struct {
 	// TODO: The resulting struct must be freed using av_frame_free().
 	frame *avutil.Frame
 	pts   int64
-	fps   list.List
-}
-
-func (h *encoder) getFps() int {
-	oneSecAgo := time.Now().Add(-time.Second)
-	for h.fps.Front().Value.(time.Time).Before(oneSecAgo) {
-		h.fps.Remove(h.fps.Front())
-	}
-	return h.fps.Len()
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -112,8 +101,6 @@ func NewEncoder(width, height, _ int, _ golog.Logger) (ourcodec.VideoEncoder, er
 }
 
 func (h *encoder) Encode(_ context.Context, img image.Image) ([]byte, error) {
-	h.fps.PushBack(time.Now())
-	fmt.Printf("FPS=%d\n", h.getFps())
 	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixFmt); err != nil {
 		return nil, errors.Wrap(err, "cannot set frame")
 	}
