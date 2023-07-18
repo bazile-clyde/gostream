@@ -15,19 +15,23 @@ import (
 	"unsafe"
 )
 
-const CODEC = "h264_v4l2m2m"
+const (
+	// pixelFormat This format is one of the output formats support by the bcm2835-codec at /dev/video11
+	// It is also known as YU12. See https://www.kernel.org/doc/html/v4.10/media/uapi/v4l/pixfmt-yuv420.html
+	pixelFormat = avcodec.AV_PIX_FMT_YUV420P
+	h264Codec   = "h264_v4l2m2m"
+)
 
 type encoder struct {
-	img         image.Image
-	reader      video.Reader
-	codec       *avcodec.Codec
-	context     *avcodec.Context
-	width       int
-	height      int
-	pixelFormat int
-	frame       *avutil.Frame
-	pts         int64
-	logger      golog.Logger
+	img     image.Image
+	reader  video.Reader
+	codec   *avcodec.Codec
+	context *avcodec.Context
+	width   int
+	height  int
+	frame   *avutil.Frame
+	pts     int64
+	logger  golog.Logger
 }
 
 func (h *encoder) Read() (img image.Image, release func(), err error) {
@@ -37,19 +41,15 @@ func (h *encoder) Read() (img image.Image, release func(), err error) {
 func NewEncoder(width, height, keyFrameInterval int, logger golog.Logger) (codec.VideoEncoder, error) {
 	h := &encoder{width: width, height: height, logger: logger}
 
-	if h.codec = avcodec.AvcodecFindEncoderByName(CODEC); h.codec == nil {
-		return nil, errors.Errorf("cannot find encoder '%s'", CODEC)
+	if h.codec = avcodec.AvcodecFindEncoderByName(h264Codec); h.codec == nil {
+		return nil, errors.Errorf("cannot find encoder '%s'", h264Codec)
 	}
 
 	if h.context = h.codec.AvcodecAllocContext3(); h.context == nil {
 		return nil, errors.Errorf("cannot allocate video codec context")
 	}
 
-	// This format is one of the output formats support by the bcm2835-codec at /dev/video11
-	// It is also known as YU12. See https://www.kernel.org/doc/html/v4.10/media/uapi/v4l/pixfmt-yuv420.html
-	h.pixelFormat = avcodec.AV_PIX_FMT_YUV420P
-
-	h.context.SetEncodeParams(width, height, avcodec.PixelFormat(h.pixelFormat))
+	h.context.SetEncodeParams(width, height, avcodec.PixelFormat(pixelFormat))
 	h.context.SetTimebase(1, keyFrameInterval)
 
 	h.reader = video.ToI420((video.ReaderFunc)(h.Read))
@@ -67,7 +67,7 @@ func NewEncoder(width, height, keyFrameInterval int, logger golog.Logger) (codec
 }
 
 func (h *encoder) Encode(ctx context.Context, img image.Image) ([]byte, error) {
-	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixelFormat); err != nil {
+	if err := avutil.AvSetFrame(h.frame, h.width, h.height, pixelFormat); err != nil {
 		return nil, errors.Wrap(err, "cannot set frame properties")
 	}
 
