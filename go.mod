@@ -18,7 +18,7 @@ require (
 	github.com/pion/rtp v1.7.13
 	github.com/pion/webrtc/v3 v3.2.11
 	github.com/pkg/errors v0.9.1
-	go.opencensus.io v0.24.0
+	github.com/stretchr/testify v1.8.4
 	go.uber.org/multierr v1.9.0
 	go.viam.com/test v1.1.0
 	go.viam.com/utils v0.1.29
@@ -220,7 +220,6 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
@@ -269,5 +268,3 @@ require (
 	mvdan.cc/unparam v0.0.0-20221223090309-7455f1af531d // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
-
-replace github.com/giorgisio/goav => /usr/local/libs/goav

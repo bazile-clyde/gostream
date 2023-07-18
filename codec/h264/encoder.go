@@ -6,11 +6,11 @@ import "C"
 import (
 	"context"
 	"github.com/edaniels/golog"
-	"github.com/giorgisio/goav/avcodec"
-	"github.com/giorgisio/goav/avutil"
 	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
 	"github.com/viamrobotics/gostream/codec"
+	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"
+	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avutil"
 	"image"
 	"unsafe"
 )
