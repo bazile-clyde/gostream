@@ -5,7 +5,6 @@ package h264
 import "C"
 import (
 	"context"
-	"fmt"
 	"github.com/edaniels/golog"
 	"github.com/giorgisio/goav/avcodec"
 	"github.com/giorgisio/goav/avutil"
@@ -112,11 +111,13 @@ func (h *encoder) encodeBytes(ctx context.Context) ([]byte, error) {
 	defer avutil.AvFrameUnref(h.frame)
 
 	if ret := h.context.AvCodecSendFrame((*avcodec.Frame)(unsafe.Pointer(h.frame))); ret < 0 {
-		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot send frame for encoding")
+		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot supply raw video to encoder")
 	}
 
 	var bytes []byte
-	for ret := 0; ret >= 0; {
+	var ret int
+loop:
+	for {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
@@ -124,18 +125,16 @@ func (h *encoder) encodeBytes(ctx context.Context) ([]byte, error) {
 		}
 
 		ret = h.context.AvCodecReceivePacket(pkt)
-		if ret == avutil.AvErrorEOF || ret == avutil.AvErrorEAGAIN {
-			break
-		} else if ret == -11 {
-			break
-		} else if ret < 0 {
-			return nil, errors.Wrap(avutil.ErrorFromCode(ret), fmt.Sprintf("error during encoding %d", ret))
+		switch ret {
+		case avutil.AvSuccess:
+			payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
+			bytes = append(bytes, payload...)
+			pkt.AvPacketUnref()
+		case avutil.AvErrorEAGAIN:
+			break loop
+		default:
+			return nil, avutil.ErrorFromCode(ret)
 		}
-
-		payload := C.GoBytes(unsafe.Pointer(pkt.Data()), C.int(pkt.Size()))
-		bytes = append(bytes, payload...)
-
-		pkt.AvPacketUnref()
 	}
 
 	return bytes, nil
