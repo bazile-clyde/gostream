@@ -69,17 +69,25 @@ func NewEncoder(width, height, keyFrameInterval int, logger golog.Logger) (codec
 
 func (h *encoder) Encode(ctx context.Context, img image.Image) ([]byte, error) {
 	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixelFormat); err != nil {
-		return nil, errors.Wrap(err, "cannot set frame")
+		return nil, errors.Wrap(err, "cannot set frame properties")
 	}
 
 	if ret := avutil.AvFrameMakeWritable(h.frame); ret < 0 {
 		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot make frame writable")
 	}
 
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	h.img = img
-	yuvImg, _, err := h.reader.Read()
+	yuvImg, release, err := h.reader.Read()
+	defer release()
+
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot get image")
+		return nil, errors.Wrap(err, "cannot read image")
 	}
 
 	h.frame.AvSetFrameFromImg(yuvImg.(*image.YCbCr))
