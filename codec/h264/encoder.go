@@ -9,91 +9,66 @@ import (
 	"github.com/edaniels/golog"
 	"github.com/giorgisio/goav/avcodec"
 	"github.com/giorgisio/goav/avutil"
+	"github.com/pion/mediadevices/pkg/io/video"
 	"github.com/pkg/errors"
-	ourcodec "github.com/viamrobotics/gostream/codec"
+	"github.com/viamrobotics/gostream/codec"
 	"image"
 	"unsafe"
 )
 
-// ffmpeg -f v4l2 -i /dev/video0 -codec:v h264_v4l2m2m webcam.mkv
-//
-// Main options
-// -f fmt (input/output)
-//
-//	Force input or output file format. The format is normally auto-detected for input files and guessed from the file extension for output files, so this
-//	option is not needed in most cases.
-//
-// -i url (input)
-//
-//	input file url
-//
-// -c[:stream_specifier] codec (input/output,per-stream)
-// -codec[:stream_specifier] codec (input/output,per-stream)
-//
-//	Select an encoder (when used before an output file) or a decoder (when used before an input file) for one or more streams. codec is the name of a
-//	decoder/encoder or a special value "copy" (output only) to indicate that the stream is not to be re-encoded.
-//
-//	For example
-//
-//			ffmpeg -i INPUT -map 0 -c:v libx264 -c:a copy OUTPUT
-//
-//		encodes all video streams with libx264 and copies all audio streams.
-//
-//		For each stream, the last matching "c" option is applied, so
-//
-//			ffmpeg -i INPUT -map 0 -c copy -c:v:1 libx264 -c:a:137 libvorbis OUTPUT
-//
-//		will copy all the streams except the second video, which will be encoded with libx264, and the 138th audio, which will be encoded with libvorbis.
-//
-// INSTALLING FFMPEG FROM SOURCE:
-//
-//	use v4.X https://github.com/FFmpeg/FFmpeg/tree/release/4.4
 const CODEC = "h264_v4l2m2m"
 
 type encoder struct {
-	codec   *avcodec.Codec
-	context *avcodec.Context
-	width   int
-	height  int
-	pixFmt  int
-	// TODO: The resulting struct must be freed using av_frame_free().
-	frame  *avutil.Frame
-	pts    int64
-	logger golog.Logger
+	img         image.Image
+	reader      video.Reader
+	codec       *avcodec.Codec
+	context     *avcodec.Context
+	width       int
+	height      int
+	pixelFormat int
+	frame       *avutil.Frame
+	pts         int64
+	logger      golog.Logger
 }
 
-func NewEncoder(width, height, keyFrameInterval int, logger golog.Logger) (ourcodec.VideoEncoder, error) {
+func (h *encoder) Read() (img image.Image, release func(), err error) {
+	return h.img, nil, nil
+}
+
+func NewEncoder(width, height, keyFrameInterval int, logger golog.Logger) (codec.VideoEncoder, error) {
 	h := &encoder{width: width, height: height, logger: logger}
 
 	if h.codec = avcodec.AvcodecFindEncoderByName(CODEC); h.codec == nil {
 		return nil, errors.Errorf("cannot find encoder '%s'", CODEC)
 	}
 
-	h.context = h.codec.AvcodecAllocContext3()
-	if h.context == nil {
-		panic("cannot allocate video codec context")
+	if h.context = h.codec.AvcodecAllocContext3(); h.context == nil {
+		return nil, errors.Errorf("cannot allocate video codec context")
 	}
 
-	h.pixFmt = avcodec.AV_PIX_FMT_YUV420P
-	h.context.SetEncodeParams(width, height, avcodec.PixelFormat(h.pixFmt))
-	h.context.SetTimebase(1, 30) // inverse of fps e.g., 30 fps == 1/30
+	// This format is one of the output formats support by the bcm2835-codec at /dev/video11
+	// It is also known as YU12. See https://www.kernel.org/doc/html/v4.10/media/uapi/v4l/pixfmt-yuv420.html
+	h.pixelFormat = avcodec.AV_PIX_FMT_YUV420P
+
+	h.context.SetEncodeParams(width, height, avcodec.PixelFormat(h.pixelFormat))
+	h.context.SetTimebase(1, keyFrameInterval)
+
+	h.reader = video.ToI420((video.ReaderFunc)(h.Read))
+
 	if h.context.AvcodecOpen2(h.codec, nil) < 0 {
 		return nil, errors.New("cannot open codec")
 	}
 
-	// AVFrame is typically allocated once and then reused multiple times to hold
-	// different data (e.g. a single AVFrame to hold frames received from a
-	// decoder). In such a case, av_frame_unref() will free any references held by
-	// the frame and reset it to its original clean state before it
-	// is reused again.
 	if h.frame = avutil.AvFrameAlloc(); h.frame == nil {
+		h.context.AvcodecClose()
 		return nil, errors.New("cannot alloc frame")
 	}
+
 	return h, nil
 }
 
 func (h *encoder) Encode(ctx context.Context, img image.Image) ([]byte, error) {
-	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixFmt); err != nil {
+	if err := avutil.AvSetFrame(h.frame, h.width, h.height, h.pixelFormat); err != nil {
 		return nil, errors.Wrap(err, "cannot set frame")
 	}
 
@@ -101,7 +76,13 @@ func (h *encoder) Encode(ctx context.Context, img image.Image) ([]byte, error) {
 		return nil, errors.Wrap(avutil.ErrorFromCode(ret), "cannot make frame writable")
 	}
 
-	h.frame.AvSetFrameFromImg(img.(*image.YCbCr))
+	h.img = img
+	yuvImg, _, err := h.reader.Read()
+	if err != nil {
+		return nil, errors.Wrap(err, "cannot get image")
+	}
+
+	h.frame.AvSetFrameFromImg(yuvImg.(*image.YCbCr))
 	h.frame.AvSetFramePTS(h.pts)
 	h.pts++
 
