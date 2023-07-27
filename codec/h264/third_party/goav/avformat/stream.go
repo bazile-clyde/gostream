@@ -3,11 +3,11 @@
 
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavformat
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavformat/avformat.h>
 import "C"
 import (
-	"github.com/giorgisio/goav/avcodec"
+	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"
 )
 
 // Rational av_stream_get_r_frame_rate (const Stream *s)

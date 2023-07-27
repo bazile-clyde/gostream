@@ -8,7 +8,7 @@
 package avdevice
 
 /*
-	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavdevice
+	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 	#include <libavdevice/avdevice.h>
 */
 import "C"

@@ -2,7 +2,7 @@
 
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavutil
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavutil/avutil.h>
 import "C"
 

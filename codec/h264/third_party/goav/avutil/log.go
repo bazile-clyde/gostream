@@ -4,7 +4,7 @@
 package avutil
 
 /*
-	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavutil
+	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 	#include <libavutil/log.h>
 	#include <stdlib.h>
 */

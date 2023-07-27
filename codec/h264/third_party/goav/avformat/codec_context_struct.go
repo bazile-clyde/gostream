@@ -6,7 +6,7 @@
 // Supported formats (muxers and demuxers) provided by the libavformat library
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavformat libavcodec libavutil libavdevice libavfilter libswresample libswscale
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <inttypes.h>
@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/giorgisio/goav/avcodec"
+	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"
 )
 
 func (cctxt *CodecContext) Type() MediaType {

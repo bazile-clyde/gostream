@@ -3,13 +3,13 @@
 
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavformat
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavformat/avformat.h>
 import "C"
 import (
 	"unsafe"
 
-	"github.com/giorgisio/goav/avcodec"
+	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"
 )
 
 func toCPacket(pkt *avcodec.Packet) *C.struct_AVPacket {

@@ -3,10 +3,10 @@
 
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavutil
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavutil/avutil.h>
 import "C"
-import "github.com/giorgisio/goav/avcodec"
+import "github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"
 
 func newRational(r C.struct_AVRational) avcodec.Rational {
 	return avcodec.NewRational(int(r.num), int(r.den))

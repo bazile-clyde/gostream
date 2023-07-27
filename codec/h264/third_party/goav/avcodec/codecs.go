@@ -3,7 +3,7 @@
 
 package avcodec
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavformat
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavformat/avformat.h>
 import "C"
 

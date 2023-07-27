@@ -4,7 +4,7 @@
 package avfilter
 
 /*
-	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavfilter
+	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 	#include <libavfilter/avfilter.h>
 */
 import "C"

@@ -2,7 +2,7 @@
 // Giorgis (habtom@giorgis.io)
 package avcodec
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavcodec
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavcodec/avcodec.h>
 import "C"
 import (

@@ -4,7 +4,7 @@
 package swresample
 
 /*
-	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libswresample
+	#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 	#include <libswresample/swresample.h>
 */
 import "C"

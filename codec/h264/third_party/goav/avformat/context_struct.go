@@ -3,14 +3,14 @@
 
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavformat
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <libavformat/avformat.h>
 import "C"
 import (
 	"reflect"
 	"unsafe"
 
-	"github.com/giorgisio/goav/avutil"
+	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avutil"
 )
 
 func (ctxt *Context) Chapters() **AvChapter {

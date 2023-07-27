@@ -6,7 +6,7 @@
 // Supported formats (muxers and demuxers) provided by the libavformat library
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg/libavformat libavcodec libavutil libavdevice libavfilter libswresample libswscale
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <inttypes.h>
