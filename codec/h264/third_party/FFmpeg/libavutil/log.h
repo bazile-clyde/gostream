@@ -121,7 +121,7 @@ typedef struct AVClass {
      * child_next iterates over _already existing_ objects, while
      * child_class_next iterates over _all possible_ children.
      */
-    attribute_deprecated
+
     const struct AVClass* (*child_class_next)(const struct AVClass *prev);
 #endif
 

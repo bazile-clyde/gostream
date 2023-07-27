@@ -394,13 +394,13 @@ typedef struct AVPacket {
      * for Matroska subtitles, whose duration values could overflow when the
      * duration field was still an int.
      */
-    attribute_deprecated
+
     int64_t convergence_duration;
 #endif
 } AVPacket;
 
 #if FF_API_INIT_PACKET
-attribute_deprecated
+
 typedef struct AVPacketList {
     AVPacket pkt;
     struct AVPacketList *next;
@@ -484,7 +484,7 @@ void av_packet_free(AVPacket **pkt);
  * @deprecated This function is deprecated. Once it's removed,
                sizeof(AVPacket) will not be a part of the ABI anymore.
  */
-attribute_deprecated
+
 void av_init_packet(AVPacket *pkt);
 #endif
 
@@ -536,7 +536,7 @@ int av_packet_from_data(AVPacket *pkt, uint8_t *data, int size);
  *
  * @deprecated Use av_packet_ref or av_packet_make_refcounted
  */
-attribute_deprecated
+
 int av_dup_packet(AVPacket *pkt);
 /**
  * Copy packet, including contents
@@ -545,7 +545,7 @@ int av_dup_packet(AVPacket *pkt);
  *
  * @deprecated Use av_packet_ref
  */
-attribute_deprecated
+
 int av_copy_packet(AVPacket *dst, const AVPacket *src);
 
 /**
@@ -555,7 +555,7 @@ int av_copy_packet(AVPacket *dst, const AVPacket *src);
  *
  * @deprecated Use av_packet_copy_props
  */
-attribute_deprecated
+
 int av_copy_packet_side_data(AVPacket *dst, const AVPacket *src);
 
 /**
@@ -565,7 +565,7 @@ int av_copy_packet_side_data(AVPacket *dst, const AVPacket *src);
  *
  * @param pkt packet to free
  */
-attribute_deprecated
+
 void av_free_packet(AVPacket *pkt);
 #endif
 /**
@@ -631,10 +631,10 @@ uint8_t* av_packet_get_side_data(const AVPacket *pkt, enum AVPacketSideDataType 
 #endif
 
 #if FF_API_MERGE_SD_API
-attribute_deprecated
+
 int av_packet_merge_side_data(AVPacket *pkt);
 
-attribute_deprecated
+
 int av_packet_split_side_data(AVPacket *pkt);
 #endif
 

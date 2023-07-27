@@ -657,7 +657,7 @@ void *av_opt_child_next(void *obj, void *prev);
  *
  * @deprecated use av_opt_child_class_iterate
  */
-attribute_deprecated
+
 const AVClass *av_opt_child_class_next(const AVClass *parent, const AVClass *prev);
 #endif
 

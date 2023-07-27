@@ -109,7 +109,7 @@ typedef struct AVAudioResampleContext AVAudioResampleContext;
  * @deprecated use libswresample
  *
  * Mixing Coefficient Types */
-enum attribute_deprecated AVMixCoeffType {
+enum  AVMixCoeffType {
     AV_MIX_COEFF_TYPE_Q8,   /** 16-bit 8.8 fixed-point                      */
     AV_MIX_COEFF_TYPE_Q15,  /** 32-bit 17.15 fixed-point                    */
     AV_MIX_COEFF_TYPE_FLT,  /** floating-point                              */
@@ -120,7 +120,7 @@ enum attribute_deprecated AVMixCoeffType {
  * @deprecated use libswresample
  *
  * Resampling Filter Types */
-enum attribute_deprecated AVResampleFilterType {
+enum  AVResampleFilterType {
     AV_RESAMPLE_FILTER_TYPE_CUBIC,              /**< Cubic */
     AV_RESAMPLE_FILTER_TYPE_BLACKMAN_NUTTALL,   /**< Blackman Nuttall Windowed Sinc */
     AV_RESAMPLE_FILTER_TYPE_KAISER,             /**< Kaiser Windowed Sinc */
@@ -129,7 +129,7 @@ enum attribute_deprecated AVResampleFilterType {
 /**
  * @deprecated use libswresample
  */
-enum attribute_deprecated AVResampleDitherMethod {
+enum  AVResampleDitherMethod {
     AV_RESAMPLE_DITHER_NONE,            /**< Do not use dithering */
     AV_RESAMPLE_DITHER_RECTANGULAR,     /**< Rectangular Dither */
     AV_RESAMPLE_DITHER_TRIANGULAR,      /**< Triangular Dither*/
@@ -144,7 +144,7 @@ enum attribute_deprecated AVResampleDitherMethod {
  *
  * Return the LIBAVRESAMPLE_VERSION_INT constant.
  */
-attribute_deprecated
+
 unsigned avresample_version(void);
 
 /**
@@ -154,7 +154,7 @@ unsigned avresample_version(void);
  * Return the libavresample build-time configuration.
  * @return  configure string
  */
-attribute_deprecated
+
 const char *avresample_configuration(void);
 
 /**
@@ -163,7 +163,7 @@ const char *avresample_configuration(void);
  *
  * Return the libavresample license.
  */
-attribute_deprecated
+
 const char *avresample_license(void);
 
 /**
@@ -179,7 +179,7 @@ const char *avresample_license(void);
  *
  * @return AVClass for AVAudioResampleContext
  */
-attribute_deprecated
+
 const AVClass *avresample_get_class(void);
 
 /**
@@ -190,7 +190,7 @@ const AVClass *avresample_get_class(void);
  *
  * @return  allocated audio resample context, or NULL on failure
  */
-attribute_deprecated
+
 AVAudioResampleContext *avresample_alloc_context(void);
 
 /**
@@ -210,7 +210,7 @@ AVAudioResampleContext *avresample_alloc_context(void);
  * @param avr  audio resample context
  * @return     0 on success, negative AVERROR code on failure
  */
-attribute_deprecated
+
 int avresample_open(AVAudioResampleContext *avr);
 
 /**
@@ -222,7 +222,7 @@ int avresample_open(AVAudioResampleContext *avr);
  * @param avr AVAudioResampleContext to check
  * @return 1 if avr is open, 0 if avr is closed.
  */
-attribute_deprecated
+
 int avresample_is_open(AVAudioResampleContext *avr);
 
 /**
@@ -241,7 +241,7 @@ int avresample_is_open(AVAudioResampleContext *avr);
  *
  * @param avr  audio resample context
  */
-attribute_deprecated
+
 void avresample_close(AVAudioResampleContext *avr);
 
 /**
@@ -254,7 +254,7 @@ void avresample_close(AVAudioResampleContext *avr);
  *
  * @param avr  audio resample context
  */
-attribute_deprecated
+
 void avresample_free(AVAudioResampleContext **avr);
 
 /**
@@ -282,7 +282,7 @@ void avresample_free(AVAudioResampleContext **avr);
  * @param matrix_encoding     matrixed stereo downmix mode (e.g. dplii)
  * @return                    0 on success, negative AVERROR code on failure
  */
-attribute_deprecated
+
 int avresample_build_matrix(uint64_t in_layout, uint64_t out_layout,
                             double center_mix_level, double surround_mix_level,
                             double lfe_mix_level, int normalize, double *matrix,
@@ -303,7 +303,7 @@ int avresample_build_matrix(uint64_t in_layout, uint64_t out_layout,
  * @param stride  distance between adjacent input channels in the matrix array
  * @return        0 on success, negative AVERROR code on failure
  */
-attribute_deprecated
+
 int avresample_get_matrix(AVAudioResampleContext *avr, double *matrix,
                           int stride);
 
@@ -328,7 +328,7 @@ int avresample_get_matrix(AVAudioResampleContext *avr, double *matrix,
  * @param stride  distance between adjacent input channels in the matrix array
  * @return        0 on success, negative AVERROR code on failure
  */
-attribute_deprecated
+
 int avresample_set_matrix(AVAudioResampleContext *avr, const double *matrix,
                           int stride);
 
@@ -362,7 +362,7 @@ int avresample_set_matrix(AVAudioResampleContext *avr, const double *matrix,
  * @param channel_map customized input channel mapping
  * @return            0 on success, negative AVERROR code on failure
  */
-attribute_deprecated
+
 int avresample_set_channel_mapping(AVAudioResampleContext *avr,
                                    const int *channel_map);
 
@@ -382,7 +382,7 @@ int avresample_set_channel_mapping(AVAudioResampleContext *avr,
  * @param compensation_distance  compensation distance, in samples
  * @return                       0 on success, negative AVERROR code on failure
  */
-attribute_deprecated
+
 int avresample_set_compensation(AVAudioResampleContext *avr, int sample_delta,
                                 int compensation_distance);
 
@@ -399,7 +399,7 @@ int avresample_set_compensation(AVAudioResampleContext *avr, int sample_delta,
  * @return              number of samples or AVERROR(EINVAL) if the value
  *                      would exceed INT_MAX
  */
-attribute_deprecated
+
 int avresample_get_out_samples(AVAudioResampleContext *avr, int in_nb_samples);
 
 /**
@@ -447,7 +447,7 @@ int avresample_get_out_samples(AVAudioResampleContext *avr, int in_nb_samples);
  *                        not including converted samples added to the internal
  *                        output FIFO
  */
-attribute_deprecated
+
 int avresample_convert(AVAudioResampleContext *avr, uint8_t **output,
                        int out_plane_size, int out_samples,
                        uint8_t * const *input, int in_plane_size,
@@ -469,7 +469,7 @@ int avresample_convert(AVAudioResampleContext *avr, uint8_t **output,
  * @param avr  audio resample context
  * @return     number of samples currently in the resampling delay buffer
  */
-attribute_deprecated
+
 int avresample_get_delay(AVAudioResampleContext *avr);
 
 /**
@@ -490,7 +490,7 @@ int avresample_get_delay(AVAudioResampleContext *avr);
  * @param avr  audio resample context
  * @return     number of samples available for reading
  */
-attribute_deprecated
+
 int avresample_available(AVAudioResampleContext *avr);
 
 /**
@@ -513,7 +513,7 @@ int avresample_available(AVAudioResampleContext *avr);
  * @param nb_samples  number of samples to read from the FIFO
  * @return            the number of samples written to output
  */
-attribute_deprecated
+
 int avresample_read(AVAudioResampleContext *avr, uint8_t **output, int nb_samples);
 
 /**
@@ -563,7 +563,7 @@ int avresample_read(AVAudioResampleContext *avr, uint8_t **output, int nb_sample
  * @return                0 on success, AVERROR on failure or nonmatching
  *                        configuration.
  */
-attribute_deprecated
+
 int avresample_convert_frame(AVAudioResampleContext *avr,
                              AVFrame *output, AVFrame *input);
 
@@ -585,7 +585,7 @@ int avresample_convert_frame(AVAudioResampleContext *avr,
  * @param in              input AVFrame
  * @return                0 on success, AVERROR on failure.
  */
-attribute_deprecated
+
 int avresample_config(AVAudioResampleContext *avr, AVFrame *out, AVFrame *in);
 
 /**

@@ -108,7 +108,7 @@ typedef struct AVBufferSinkParams {
  *
  * Must be freed with av_free().
  */
-attribute_deprecated
+
 AVBufferSinkParams *av_buffersink_params_alloc(void);
 
 /**
@@ -127,7 +127,7 @@ typedef struct AVABufferSinkParams {
  *
  * Must be freed with av_free().
  */
-attribute_deprecated
+
 AVABufferSinkParams *av_abuffersink_params_alloc(void);
 #endif
 

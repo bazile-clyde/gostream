@@ -884,7 +884,7 @@ typedef struct AVStream {
     /**
      * @deprecated use the codecpar struct instead
      */
-    attribute_deprecated
+
     AVCodecContext *codec;
 #endif
     void *priv_data;
@@ -1024,7 +1024,7 @@ typedef struct AVStream {
      *
      * @deprecated unused
      */
-    attribute_deprecated
+
     char *recommended_encoder_configuration;
 #endif
 
@@ -1120,14 +1120,14 @@ typedef struct AVStream {
  * Accessors for some AVStream fields. These used to be provided for ABI
  * compatibility, and do not need to be used anymore.
  */
-attribute_deprecated
+
 AVRational av_stream_get_r_frame_rate(const AVStream *s);
-attribute_deprecated
+
 void       av_stream_set_r_frame_rate(AVStream *s, AVRational r);
 #if FF_API_LAVF_FFSERVER
-attribute_deprecated
+
 char* av_stream_get_recommended_encoder_configuration(const AVStream *s);
-attribute_deprecated
+
 void  av_stream_set_recommended_encoder_configuration(AVStream *s, char *configuration);
 #endif
 #endif
@@ -1310,7 +1310,7 @@ typedef struct AVFormatContext {
      *
      * @deprecated Use url instead.
      */
-    attribute_deprecated
+
     char filename[1024];
 #endif
 
@@ -1796,7 +1796,7 @@ typedef struct AVFormatContext {
      *
      * @deprecated Use io_open and io_close.
      */
-    attribute_deprecated
+
     int (*open_cb)(struct AVFormatContext *s, AVIOContext **p, const char *url, int flags, const AVIOInterruptCB *int_cb, AVDictionary **options);
 #endif
 
@@ -1869,39 +1869,39 @@ typedef struct AVFormatContext {
  * Accessors for some AVFormatContext fields. These used to be provided for ABI
  * compatibility, and do not need to be used anymore.
  */
-attribute_deprecated
+
 int av_format_get_probe_score(const AVFormatContext *s);
-attribute_deprecated
+
 AVCodec * av_format_get_video_codec(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_video_codec(AVFormatContext *s, AVCodec *c);
-attribute_deprecated
+
 AVCodec * av_format_get_audio_codec(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_audio_codec(AVFormatContext *s, AVCodec *c);
-attribute_deprecated
+
 AVCodec * av_format_get_subtitle_codec(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_subtitle_codec(AVFormatContext *s, AVCodec *c);
-attribute_deprecated
+
 AVCodec * av_format_get_data_codec(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_data_codec(AVFormatContext *s, AVCodec *c);
-attribute_deprecated
+
 int       av_format_get_metadata_header_padding(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_metadata_header_padding(AVFormatContext *s, int c);
-attribute_deprecated
+
 void *    av_format_get_opaque(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_opaque(AVFormatContext *s, void *opaque);
-attribute_deprecated
+
 av_format_control_message av_format_get_control_message_cb(const AVFormatContext *s);
-attribute_deprecated
+
 void      av_format_set_control_message_cb(AVFormatContext *s, av_format_control_message callback);
 #if FF_API_OLD_OPEN_CALLBACKS
-attribute_deprecated AVOpenCallback av_format_get_open_cb(const AVFormatContext *s);
-attribute_deprecated void av_format_set_open_cb(AVFormatContext *s, AVOpenCallback callback);
+ AVOpenCallback av_format_get_open_cb(const AVFormatContext *s);
+ void av_format_set_open_cb(AVFormatContext *s, AVOpenCallback callback);
 #endif
 #endif
 
@@ -1951,12 +1951,12 @@ const char *avformat_license(void);
  * @see av_register_input_format()
  * @see av_register_output_format()
  */
-attribute_deprecated
+
 void av_register_all(void);
 
-attribute_deprecated
+
 void av_register_input_format(AVInputFormat *format);
-attribute_deprecated
+
 void av_register_output_format(AVOutputFormat *format);
 #endif
 
@@ -1988,7 +1988,7 @@ int avformat_network_deinit(void);
  * if f is non-NULL, returns the next registered input format after f
  * or NULL if f is the last one.
  */
-attribute_deprecated
+
 AVInputFormat  *av_iformat_next(const AVInputFormat  *f);
 
 /**
@@ -1996,7 +1996,7 @@ AVInputFormat  *av_iformat_next(const AVInputFormat  *f);
  * if f is non-NULL, returns the next registered output format after f
  * or NULL if f is the last one.
  */
-attribute_deprecated
+
 AVOutputFormat *av_oformat_next(const AVOutputFormat *f);
 #endif
 
@@ -2229,7 +2229,7 @@ int avformat_open_input(AVFormatContext **ps, const char *url, ff_const59 AVInpu
 /**
  * @deprecated Use an AVDictionary to pass options to a demuxer.
  */
-attribute_deprecated
+
 int av_demuxer_open(AVFormatContext *ic);
 #endif
 
@@ -2970,7 +2970,7 @@ int avformat_queue_attached_pictures(AVFormatContext *s);
  * @return  >=0 on success;
  *          AVERROR code on failure
  */
-attribute_deprecated
+
 int av_apply_bitstream_filters(AVCodecContext *codec, AVPacket *pkt,
                                AVBitStreamFilterContext *bsfc);
 #endif

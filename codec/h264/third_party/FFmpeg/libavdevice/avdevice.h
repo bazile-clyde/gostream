@@ -417,7 +417,7 @@ typedef struct AVDeviceCapabilitiesQuery {
 /**
  * AVOption table used by devices to implement device capabilities API. Should not be used by a user.
  */
-attribute_deprecated
+
 extern const AVOption av_device_capabilities[];
 
 /**
@@ -437,7 +437,7 @@ extern const AVOption av_device_capabilities[];
  *
  * @return >= 0 on success, negative otherwise.
  */
-attribute_deprecated
+
 int avdevice_capabilities_create(AVDeviceCapabilitiesQuery **caps, AVFormatContext *s,
                                  AVDictionary **device_options);
 
@@ -447,7 +447,7 @@ int avdevice_capabilities_create(AVDeviceCapabilitiesQuery **caps, AVFormatConte
  * @param caps Device capabilities data to be freed.
  * @param s    Context of the device.
  */
-attribute_deprecated
+
 void avdevice_capabilities_free(AVDeviceCapabilitiesQuery **caps, AVFormatContext *s);
 #endif
 

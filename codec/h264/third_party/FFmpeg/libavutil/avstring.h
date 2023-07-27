@@ -161,7 +161,7 @@ char *av_asprintf(const char *fmt, ...) av_printf_format(1, 2);
  * Convert a number to an av_malloced string.
  * @deprecated  use av_asprintf() with "%f" or a more specific format
  */
-attribute_deprecated
+
 char *av_d2str(double d);
 #endif
 

@@ -678,7 +678,7 @@ void avfilter_link_free(AVFilterLink **link);
  * Get the number of channels of a link.
  * @deprecated Use av_buffersink_get_channels()
  */
-attribute_deprecated
+
 int avfilter_link_get_channels(AVFilterLink *link);
 #endif
 #if FF_API_FILTER_LINK_SET_CLOSED
@@ -687,7 +687,7 @@ int avfilter_link_get_channels(AVFilterLink *link);
  * @deprecated applications are not supposed to mess with links, they should
  * close the sinks.
  */
-attribute_deprecated
+
 void avfilter_link_set_closed(AVFilterLink *link, int closed);
 #endif
 /**
@@ -720,7 +720,7 @@ const AVFilter *av_filter_iterate(void **opaque);
 
 #if FF_API_NEXT
 /** Initialize the filter system. Register all builtin filters. */
-attribute_deprecated
+
 void avfilter_register_all(void);
 
 /**
@@ -733,7 +733,7 @@ void avfilter_register_all(void);
  * @return 0 if the registration was successful, a negative value
  * otherwise
  */
-attribute_deprecated
+
 int avfilter_register(AVFilter *filter);
 
 /**
@@ -741,7 +741,7 @@ int avfilter_register(AVFilter *filter);
  * @return If prev is non-NULL, next registered filter after prev or NULL if
  * prev is the last filter. If prev is NULL, return the first registered filter.
  */
-attribute_deprecated
+
 const AVFilter *avfilter_next(const AVFilter *prev);
 #endif
 
@@ -854,7 +854,7 @@ typedef struct AVFilterGraph {
 
     char *scale_sws_opts; ///< sws options to use for the auto-inserted scale filters
 #if FF_API_LAVR_OPTS
-    attribute_deprecated char *resample_lavr_opts;   ///< libavresample options to use for the auto-inserted resample filters
+     char *resample_lavr_opts;   ///< libavresample options to use for the auto-inserted resample filters
 #endif
 
     /**

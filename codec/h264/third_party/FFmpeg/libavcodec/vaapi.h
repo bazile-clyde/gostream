@@ -53,7 +53,7 @@
  *
  * Deprecated: use AVCodecContext.hw_frames_ctx instead.
  */
-struct attribute_deprecated vaapi_context {
+struct  vaapi_context {
     /**
      * Window system dependent data
      *
