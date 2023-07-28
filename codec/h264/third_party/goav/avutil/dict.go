@@ -7,7 +7,7 @@
 // Some generic features and utilities provided by the libavutil library
 package avutil
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg -w
 //#include <libavutil/avutil.h>
 //#include <libavutil/dict.h>
 //#include <stdlib.h>

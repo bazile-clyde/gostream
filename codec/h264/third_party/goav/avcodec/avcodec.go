@@ -5,7 +5,7 @@
 // Provides some generic global options, which can be set on all the encoders and decoders.
 package avcodec
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg -w
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <inttypes.h>

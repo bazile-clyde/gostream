@@ -3,7 +3,7 @@
 
 package avformat
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg -w
 //#include <libavutil/avutil.h>
 import "C"
 import "github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"

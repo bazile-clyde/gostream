@@ -3,7 +3,7 @@
 
 package swscale
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg -w
 //#include <libswscale/swscale.h>
 import "C"
 import (

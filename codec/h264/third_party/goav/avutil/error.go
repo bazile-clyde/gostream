@@ -7,7 +7,7 @@
 // Some generic features and utilities provided by the libavutil library
 package avutil
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg -w
 //#include <libavutil/error.h>
 //#include <stdlib.h>
 //static const char *error2string(int code) { return av_err2str(code); }

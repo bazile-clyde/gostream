@@ -6,7 +6,7 @@
 // Pixel format conversion: is the process of converting the image format and colorspace of the image.
 package swscale
 
-//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg
+//#cgo CFLAGS: -I${SRCDIR}/../../FFmpeg -w
 //#include <stdio.h>
 //#include <stdlib.h>
 //#include <inttypes.h>
