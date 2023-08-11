@@ -4,6 +4,7 @@ package gostream
 import (
 	"context"
 	"errors"
+	"go.viam.com/rdk/rimage"
 	"image"
 	"sync"
 	"time"
@@ -254,25 +255,35 @@ func (bs *basicStream) processInputFrames() {
 				defer framePair.Release()
 			}
 
-			bounds := framePair.Media.Bounds()
-			newDx, newDy := bounds.Dx(), bounds.Dy()
-			if bs.videoEncoder == nil || dx != newDx || dy != newDy {
-				dx, dy = newDx, newDy
-				bs.logger.Infow("detected new image bounds", "width", dx, "height", dy)
+			var encodedFrame []byte
+			lazy := framePair.Media.(*rimage.LazyEncodedImage)
+			if lazy.MIMEType() == "video/h264" {
+				// already encoded
+				encodedFrame = lazy.RawData()
+			} else {
 
-				if err := bs.initVideoCodec(dx, dy); err != nil {
+				bounds := framePair.Media.Bounds()
+				newDx, newDy := bounds.Dx(), bounds.Dy()
+				if bs.videoEncoder == nil || dx != newDx || dy != newDy {
+					dx, dy = newDx, newDy
+					bs.logger.Infow("detected new image bounds", "width", dx, "height", dy)
+
+					if err := bs.initVideoCodec(dx, dy); err != nil {
+						bs.logger.Error(err)
+						initErr = true
+						return
+					}
+				}
+
+				// thread-safe because the size is static
+				var err error
+				encodedFrame, err = bs.videoEncoder.Encode(bs.shutdownCtx, framePair.Media)
+				if err != nil {
 					bs.logger.Error(err)
-					initErr = true
 					return
 				}
 			}
 
-			// thread-safe because the size is static
-			encodedFrame, err := bs.videoEncoder.Encode(bs.shutdownCtx, framePair.Media)
-			if err != nil {
-				bs.logger.Error(err)
-				return
-			}
 			if encodedFrame != nil {
 				select {
 				case <-bs.shutdownCtx.Done():
