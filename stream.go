@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"go.viam.com/rdk/rimage"
+	utils2 "go.viam.com/rdk/utils"
 	"image"
 	"sync"
 	"time"
@@ -257,7 +258,7 @@ func (bs *basicStream) processInputFrames() {
 
 			var encodedFrame []byte
 			lazy := framePair.Media.(*rimage.LazyEncodedImage)
-			if lazy.MIMEType() == "video/h264" {
+			if lazy.MIMEType() == utils2.MimeTypeH264 {
 				// already encoded
 				encodedFrame = lazy.RawData()
 			} else {

@@ -21,7 +21,7 @@ require (
 	go.uber.org/multierr v1.11.0
 	go.viam.com/rdk v0.7.0
 	go.viam.com/test v1.1.1-0.20220913152726-5da9916c08a2
-	go.viam.com/utils v0.1.38
+	go.viam.com/utils v0.1.40
 	goji.io v2.0.2+incompatible
 	golang.org/x/time v0.3.0
 	google.golang.org/grpc v1.54.0
@@ -309,3 +309,5 @@ require (
 	mvdan.cc/unparam v0.0.0-20221223090309-7455f1af531d // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
+
+replace go.viam.com/rdk => /usr/local/libs/rdk
