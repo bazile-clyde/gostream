@@ -2,7 +2,7 @@ package h264
 
 import (
 	"github.com/edaniels/golog"
-	"github.com/viamrobotics/gostream/codec/h264/third_party/goav/avcodec"
+	"github.com/giorgisio/goav/avcodec"
 
 	"github.com/viamrobotics/gostream"
 	"github.com/viamrobotics/gostream/codec"
